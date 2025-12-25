@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     host_url: str = os.getenv("HOST_URL", "")
     ngram_index: str = os.getenv("NGRAM_INDEX", "")
     vector_index: str = os.getenv("VECTOR_INDEX", "")
+    pipeline_index: str = os.getenv("PIPELINE_INDEX", "")
 
 
 
