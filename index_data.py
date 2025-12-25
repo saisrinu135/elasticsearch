@@ -17,16 +17,39 @@ def _check_index_exists(client: Elasticsearch, index_name: str) -> bool:
         raise ConnectionError(f"Error checking if index exists: {e}")
     
 
-def _create_index(client: Elasticsearch, index_name: str = settings.index_name):
+def _create_index(client: Elasticsearch, index_name: str = settings.index_name, use_n_gram_tokenizer: bool = False):
     try:
         if not _check_index_exists(client=client, index_name=index_name):
-            client.indices.create(index=index_name)
-            pprint(f"Index '{index_name}' created.")
-        else:
-            pprint(f"Index '{index_name}' already exists.")
+            tokenizer = 'standard' if not use_n_gram_tokenizer else 'ngram_tokenizer'
+
+            body = {
+                    "settings": {
+                        "analysis": {
+                            "analyzer": {
+                                "default": {
+                                    "type": "custom",
+                                    "tokenizer": tokenizer
+                                }
+                            },
+                            "tokenizer": {
+                                "ngram_tokenizer":{
+                                    "type": "edge_ngram",
+                                    "min_gram": 1,
+                                    "max_gram": 30,
+                                    "token_chars": ['letter', 'digit']
+                                }
+                            }
+                        }
+                    }
+                }
+
+            return client.indices.create(
+                index=index_name,
+                body=body
+            )
 
     except Exception as e:
-        ConnectionError(f"Error creating index: {e}")
+        raise ConnectionError(f"Error creating index: {e}")
     
 
 def _insert_documents(client: Elasticsearch, index_name: str, documents: list[dict]):
@@ -53,17 +76,18 @@ def read_data(file_path: str) -> list[dict]:
         return []
 
 
-def index_data(index_name: str = settings.index_name):
+def index_data(index_name: str = settings.index_name, use_n_gram_tokenizer: bool = False):
     try:
         client = get_client()
-        _create_index(client=client, index_name=index_name)
+        index_name = settings.ngram_index if use_n_gram_tokenizer else settings.index_name
+        _create_index(client=client, index_name=index_name, use_n_gram_tokenizer=use_n_gram_tokenizer)
         documents = read_data('data/apod.json')
         _insert_documents(client=client, index_name=index_name, documents=documents)
-        pprint("Data indexing completed.")
+        pprint(f"Data indexing completed in {index_name}")
     
     except Exception as e:
         print("Error in indexing data:", e)
     
 
 if __name__ == '__main__':
-    index_data()
+    index_data(use_n_gram_tokenizer=True)

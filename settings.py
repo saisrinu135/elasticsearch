@@ -7,8 +7,10 @@ load_dotenv()
 
 
 class Settings(BaseSettings):
-    index_name: str = os.getenv("INDEX_NAME", "default_index")
-    host_url: str = os.getenv("HOST_URL", "http://localhost:8000")
+    index_name: str = os.getenv("INDEX_NAME", "")
+    host_url: str = os.getenv("HOST_URL", "")
+    ngram_index: str = os.getenv("NGRAM_INDEX", "")
+    vector_index: str = os.getenv("VECTOR_INDEX", "")
 
 
 

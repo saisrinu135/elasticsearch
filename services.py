@@ -10,9 +10,6 @@ def get_client() -> Elasticsearch:
     try:
 
         client = Elasticsearch(settings.host_url)
-        print("Elasticsearch client created with host:", settings.host_url)
-        pprint(client.info())
-        print("-------------")
         return client
     
     except Exception as e:
