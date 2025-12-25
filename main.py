@@ -237,7 +237,9 @@ def vector_search(
                 {
                     "knn": {
                         "field": "embedding",
-                        "query_vector": model.encode(search_query)
+                        "query_vector": model.encode(search_query).tolist(),
+                        "k": size,
+                        "num_candidates": 100
                     }
                 }
             ]
@@ -273,7 +275,7 @@ def vector_search(
     total_hits = response['hits']['total']['value']
     total_pages = (total_hits + size - 1) // size
 
-    results = [hit.get('_source') for hit in response.get('hits', {}).get('hits', [])]
+    results = [hit.get('_source').remove('embedding') for hit in response.get('hits', {}).get('hits', [])]
 
 
     return (

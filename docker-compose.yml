@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: elasticsearch1
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -14,6 +12,13 @@ services:
       - es_data:/usr/share/elasticsearch/data
     networks:
       - elastic
+    logging:
+      driver: "none"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   api:
     build: .
@@ -21,13 +26,14 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - ELASTICSEARCH_HOST=http://elasticsearch:9200
+      - ELASTICSEARCH_HOST=http://elasticsearch1:9200
       - INDEX_NAME=${INDEX_NAME}
-      - HOST_URL=%{HOST_URL}
+      - HOST_URL=http://elasticsearch1:9200
       - NGRAM_INDEX=${NGRAM_INDEX}
       - VECTOR_INDEX=${VECTOR_INDEX}
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
     networks:
       - elastic
     volumes:
